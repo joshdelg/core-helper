@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Core Workout Helper</title>
+		<link rel="stylesheet" href="styles/styles.css">
+	</head>
+	<body>
+		<form id="workout-selector" onclick="workoutDisplay()">
+			<p>Please select a workout:</p>
+			<label class="select-label">
+				<input type="radio" name="workout" value="dirtydozen" />
+				Dirty Dozen
+			</label>
+			<label class="select-label">
+				<input type="radio" name="workout" value="alec" />
+				Alec's Fun Workout
+			</label>
+			<label class="select-label">
+				<input type="radio" name="workout" value="custom" />
+				Custom Workout
+			</label>
+
+			<div id="workout-list"></div>
+		</form>
+		<a href="builder.html">
+			<div id="link-button" style="display:none;">Go to Workout Builder →</div>
+		</a>
+		
+		<p id="workout-name" class="info" style="font-size:42px;"></p>
+		<p id="step-name" class="info"></p>
+		<p id="time"></p>
+		<p id="next-step" class="info"></p>
+
+<!-- 		<div class="halfContainer">
+			<div class="halfButton" onclick="parseWorkout()">Start Workout</div>
+			<div class="halfButton">​</div>
+		</div> -->
+		<div id="button1" onclick="parseWorkout()" class="fullButton noselect">Start Workout</div>
+
+		<script src="js/presets.js" type="text/javascript"></script>
+		<script src="js/jquery.min.js" type="text/javascript"></script>
+		<script src="js/quickfit.js" type="text/javascript"></script>
+		<script src="js/js.cookie-2.2.0.min.js" type="text/javascript"></script>
+		<script>
+			function getWorkout() {
+				var buildLink = document.getElementById("link-button");
+				buildLink.style.display = "none";
+
+				switch (getRadioVal(document.getElementById("workout-selector"), "workout")) {
+					case "dirtydozen":
+						var workout = presets[0];
+						break;
+					case "alec":
+						var workout = presets[1];
+						break;
+					case "custom":
+						buildLink.style.display = "inline";
+						var workout = JSON.parse(Cookies.get('customWorkout'));
+				}
+				return workout;
+			}
+
+			function workoutDisplay() {
+				var wkElement = document.getElementById("workout-list");
+				wkElement.style.display = "block";
+
+				$("div.step").remove();
+				$("div.reps").remove();
+				
+				var workout = getWorkout();
+				var x;
+				for (x of workout.steps) {
+					var newStep =  document.createElement("div");
+					newStep.innerHTML = x.name;
+					newStep.classList.add("step");
+					wkElement.appendChild(newStep);
+
+					var newRep = document.createElement("div");
+					var wkdesc;
+					if (x.hasOwnProperty("time")) {
+						wkdesc = x.time + " seconds";
+					} else {
+						if (typeof(x.reps) === "number") {
+								wkdesc = x.reps + " reps";
+						} else {
+								wkdesc = x.reps;
+						}
+					}
+
+					newRep.innerHTML = wkdesc;
+					newRep.classList.add("reps");
+					document.getElementById("workout-list").appendChild(newRep);
+				}
+			}
+
+			function getRadioVal(form, name) {
+				var val;
+				var radios = form.elements[name];
+				// loop through list of radio buttons
+				for (var i=0, len=radios.length; i<len; i++) {
+					if (radios[i].checked) {
+						val = radios[i].value;
+						break;
+					}
+				}
+				return val;
+			}
+
+			async function parseWorkout() {
+				var workout = getWorkout();
+				document.getElementById("workout-selector").style.display = "none";
+				var buildLink = document.getElementById("link-button");
+				buildLink.style.display = "none";
+
+				document.getElementById("workout-name").innerHTML = "Workout: " + workout.name;
+				var button = document.getElementById("button1");
+				button.innerHTML = " ";
+				button.removeAttribute("onclick");
+
+				var steps = workout.steps;
+				var nextStep = document.getElementById("next-step");
+				nextStep.innerHTML = "Next: " + steps[0].name;
+				var stepName = document.getElementById("step-name");
+				var stepTime = document.getElementById("time")
+
+				// iterate over step list
+				var i;
+				var rest = 3
+				for (i = 0; i < steps.length; i++) {
+					// give user time to move positions
+					if (steps[i].hasOwnProperty("time")) {
+						stepName.innerHTML = "Current: REST";
+						changeColor("LightCoral");
+						await timer(rest);
+					}
+
+					changeColor("LightGreen");
+					stepName.innerHTML = "Current: " + steps[i].name;
+
+					try {
+						nextStep.innerHTML = "Next: " + steps[i+1].name;
+					} catch(err) {
+						nextStep.innerHTML = "Next: Done!";
+					}
+
+					// check whether step is time or rep based
+					if (steps[i].hasOwnProperty("time")) {
+						stepTime.style.fontSize = "240px";
+						await timer(steps[i].time, steps[i].special);
+						// set rest time between steps
+						rest = 15
+					} else {
+						if (typeof(steps[i].reps) === "number") {
+							var wkdesc = steps[i].reps + " reps";
+						} else {
+							var wkdesc = steps[i].reps;
+						}
+
+						stepTime.innerHTML = wkdesc
+						$('#time').quickfit({max: 240});
+						await buttonResolver();
+						// reset screen for next step
+						button.innerHTML = " ";
+						button.removeAttribute("onclick");
+						rest = 3
+					}
+				}
+
+				changeColor("LightCoral");
+				nextStep.style.display = "none";
+				stepName.style.display = "none";
+				stepTime.innerHTML = "Done!";
+
+			}
+
+			function buttonResolver() {
+				return new Promise(resolve => {
+					var button = document.getElementById("button1");
+					button.innerHTML = "Continue";
+					button.onclick = function() {
+						resolve();
+					}
+				})
+			}
+
+			function timer(seconds, special) {
+				return new Promise(resolve => {
+					// create a secondary timer for the purple screen
+					if (special !== undefined) {
+						specialTimer((seconds - special) * 1000);
+					}
+					var countDownDate = new Date();
+					countDownDate.setSeconds(countDownDate.getSeconds() + seconds);
+					var dt = countDownDate.getTime();
+
+					var x = setInterval(function() {
+						var now = new Date().getTime();
+						var distance = dt - now;
+						var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+						var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+						document.getElementById("time").innerHTML = minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
+						if (distance < 0) {
+							clearInterval(x);
+							resolve();
+						}
+					}, 50);
+				})
+			}
+
+			function specialTimer(ms) {
+				setTimeout(function() {
+					changeColor("Orchid");
+				}, ms);
+			}
+
+			function changeColor(color) {
+				document.body.style.backgroundColor = color;
+			}
+		</script>
+	</body>
+</html>
