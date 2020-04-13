@@ -106,3 +106,7 @@ p {
 #link-button {
 	font-size: 48px;
 }
+
+a:visited, a:link {
+  color: blue;
+}

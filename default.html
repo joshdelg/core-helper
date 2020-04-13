@@ -133,6 +133,14 @@
 						stepName.innerHTML = "Current: REST";
 						changeColor("LightCoral");
 						await timer(rest);
+					} else {
+						try {
+							if (steps[i-1].hasOwnProperty("time")) {
+								stepName.innerHTML = "Current: REST";
+								changeColor("LightCoral");
+								await timer(3);
+							}
+						} catch(e) {}
 					}
 
 					changeColor("LightGreen");
@@ -140,7 +148,7 @@
 
 					try {
 						nextStep.innerHTML = "Next: " + steps[i+1].name;
-					} catch(err) {
+					} catch(e) {
 						nextStep.innerHTML = "Next: Done!";
 					}
 

@@ -22,7 +22,7 @@
 			function loadCookie() {
 				try {
 					var workout = JSON.parse(Cookies.get('customWorkout'));
-				} catch(err) {
+				} catch(e) {
 					var workout = {
 						"name":"Custom Workout",
 						"steps":[]
@@ -97,7 +97,8 @@
 						});
 					}
 				}
-				Cookies.set('customWorkout', workout);
+				Cookies.set('customWorkout', workout, { expires: 365 });
+				alert("Custom workout saved with " + workout.steps.length + " exercise steps");
 			}
 
 			function resetWorkout() {
