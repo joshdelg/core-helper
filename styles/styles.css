@@ -22,22 +22,6 @@ p {
 	margin-bottom: 24px;
 }
 
-/*.halfContainer {
-	right: 0;
-	bottom: 0;
-	position: fixed;
-	width: 100%;
-}
-.halfButton {
-	width: calc(50% - 10px);
-	background-color: white;
-	color: black;
-	text-align: center;
-	display: inline-block;
-	border-width: 10px 5px 10px 10px;
-	border-color: gray;
-}*/
-
 .fullButton {
 	bottom: 0;
 	right: 0;
